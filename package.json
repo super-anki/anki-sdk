@@ -1,0 +1,23 @@
+{
+  "name": "@super-anki/anki-sdk",
+  "version": "0.0.0",
+  "description": "revive your anki cars",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/super-anki/anki-sdk.git"
+  },
+  "keywords": [
+    "anki",
+    "sdk"
+  ],
+  "author": "Vincent Talbot",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/super-anki/anki-sdk/issues"
+  },
+  "homepage": "https://github.com/super-anki/anki-sdk#readme"
+}
