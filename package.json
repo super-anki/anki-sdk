@@ -22,9 +22,13 @@
   },
   "homepage": "https://github.com/super-anki/anki-sdk#readme",
   "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "eslint": "^9.21.0",
+    "globals": "^16.0.0",
     "semantic-release": "^24.2.3",
     "tsup": "^8.4.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.26.0"
   },
   "dependencies": {
     "@abandonware/noble": "^1.9.2-26"
