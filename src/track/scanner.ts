@@ -1,9 +1,10 @@
-import type { CarContract } from "@/car/car"
 import type { TrackPieceContract, TrackPosition } from "./piece"
 import { TrackDirection, TrackPiece, TrackType, trackTypeFromId } from "./piece"
 import type { Message } from "@/message/message"
 import { TransitionUpdateResponse } from "@/message/response/transition-update"
 import { PositionUpdateResponse } from "@/message/response/position-update"
+import type { CarStoreContract } from "@/store/cars"
+import { CarStore } from "@/store/cars"
 
 export type TrackScannerListener = (track: Array<TrackPieceContract>) => void
 
@@ -16,6 +17,7 @@ export interface TrackScannerContract {
 export type TrackScannedCallback = (result: boolean) => void
 
 export class TrackScanner implements TrackScannerContract {
+  private _store: CarStoreContract = CarStore.getInstance()
   private _scanning: boolean = false
   private _pieces: Array<TrackPieceContract> = []
   private _tracking: boolean = false
@@ -55,7 +57,7 @@ export class TrackScanner implements TrackScannerContract {
         }
       }
 
-      const car = { id } as CarContract
+      const car = self._store.getCar(id)
       car?.addListener(self.onMessage.bind(self))
       car?.setSpeed(450, 500)
       car?.changeLane(0)
