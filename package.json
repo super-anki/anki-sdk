@@ -2,7 +2,7 @@
   "name": "@super-anki/anki-sdk",
   "version": "1.0.0",
   "description": "revive your anki cars",
-  "main": "dist/index.js",
+  "main": "src/index.ts",
   "dist": {
     "main": "dist/index.js",
     "module": "dist/index.mjs",
