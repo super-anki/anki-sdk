@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/super-anki/anki-sdk/issues"
   },
-  "homepage": "https://github.com/super-anki/anki-sdk#readme"
+  "homepage": "https://github.com/super-anki/anki-sdk#readme",
+  "devDependencies": {
+    "semantic-release": "^24.2.3"
+  }
 }
