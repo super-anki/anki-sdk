@@ -2,12 +2,8 @@
   "name": "@super-anki/anki-sdk",
   "version": "1.0.0",
   "description": "revive your anki cars",
-  "main": "src/index.ts",
-  "dist": {
-    "main": "dist/index.js",
-    "module": "dist/index.mjs",
-    "types": "dist/index.d.ts"
-  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsup",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -28,6 +24,7 @@
   "homepage": "https://github.com/super-anki/anki-sdk#readme",
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@semantic-release/git": "^10.0.1",
     "@types/node": "^22.13.9",
     "eslint": "^9.21.0",
     "globals": "^16.0.0",
@@ -40,11 +37,23 @@
     "@abandonware/noble": "^1.9.2-26"
   },
   "release": {
-    "branches": ["main"],
+    "branches": [
+      "main"
+    ],
     "plugins": [
       "@semantic-release/commit-analyzer",
       "@semantic-release/release-notes-generator",
       "@semantic-release/npm",
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "package.json",
+            "dist/**/*.{js,ts,mts,mjs}",
+            "readme.md"
+          ]
+        }
+      ],
       "@semantic-release/github"
     ]
   }
