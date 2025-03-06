@@ -314,6 +314,7 @@ declare class PositionUpdateResponse extends Message {
 }
 
 declare class StatusResponse extends Message {
+    readonly onTrack: boolean;
     readonly onCharger: boolean;
     readonly batteryLow: boolean;
     readonly batteryFull: boolean;

@@ -368,11 +368,13 @@ var PositionUpdateResponse = class extends Message {
 
 // src/message/response/status.ts
 var StatusResponse = class extends Message {
+  onTrack;
   onCharger;
   batteryLow;
   batteryFull;
   constructor(id, payload) {
     super(id, payload);
+    this.onTrack = this.payload.readUInt8(2) === 1;
     this.onCharger = this.payload.readUInt8(3) === 1;
     this.batteryLow = this.payload.readUInt8(4) === 1;
     this.batteryFull = this.payload.readUInt8(5) === 1;
@@ -491,7 +493,7 @@ var ChangeLaneRequest = class extends Message {
     this.payload.writeUInt8(37 /* CHANGE_LANE */, 1);
     this.payload.writeUInt16LE(speed, 2);
     this.payload.writeUInt16LE(acceleration, 4);
-    this.payload.writeUInt16LE(offsetRoadCenter, 6);
+    this.payload.writeFloatLE(offsetRoadCenter, 6);
     this.payload.writeUInt8(hopIntent, 10);
     this.payload.writeUInt8(tag, 11);
     this.offsetRoadCenter = offsetRoadCenter;
