@@ -24,7 +24,7 @@ export class ChangeLaneRequest extends Message {
     this.payload.writeUInt8(RequestCode.CHANGE_LANE, 1)
     this.payload.writeUInt16LE(speed, 2)
     this.payload.writeUInt16LE(acceleration, 4)
-    this.payload.writeUInt16LE(offsetRoadCenter, 6)
+    this.payload.writeFloatLE(offsetRoadCenter, 6)
     this.payload.writeUInt8(hopIntent, 10)
     this.payload.writeUInt8(tag, 11)
 
