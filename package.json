@@ -34,7 +34,8 @@
     "typescript-eslint": "^8.26.0"
   },
   "dependencies": {
-    "@abandonware/noble": "^1.9.2-26"
+    "@abandonware/noble": "^1.9.2-26",
+    "log4js": "^6.9.1"
   },
   "release": {
     "branches": [
