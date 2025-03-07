@@ -34,6 +34,7 @@ export enum ResponseCode {
     OFFSET_FROM_ROAD_CENTER = 0x2d,
     SPEED_UPDATE = 0x36,
     STATUS_UPDATE = 0x3f,
+    OFFSET_UPDATE = 0x41,
     COLLISION = 0x4d,
     CYCLE_OVERTIME = 0x86,
 }
