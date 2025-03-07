@@ -12,6 +12,7 @@ import { StatusResponse } from "./response/status"
 import { TransitionUpdateResponse } from "./response/transition-update"
 import { VersionResponse } from "./response/version"
 import { Log } from "@/log"
+import { SpeedUpdateResponse } from "./response/speed-update"
 
 export class Builder {
   private _messageId: number
@@ -52,6 +53,8 @@ export class Builder {
       return new TransitionUpdateResponse(this._id, this._payload)
     case ResponseCode.VERSION:
       return new VersionResponse(this._id, this._payload)
+    case ResponseCode.SPEED_UPDATE:
+      return new SpeedUpdateResponse(this._id, this._payload)
     default:
       Log.debug(`Unknown message id: ${this._messageId}`, this._payload)
       return null

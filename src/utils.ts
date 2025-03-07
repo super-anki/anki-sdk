@@ -32,6 +32,7 @@ export enum ResponseCode {
     INTERSECTION_UPDATE = 0x2a,
     DELOCALIZED = 0x2b,
     OFFSET_FROM_ROAD_CENTER = 0x2d,
+    SPEED_UPDATE = 0x36,
     STATUS_UPDATE = 0x3f,
     COLLISION = 0x4d,
     CYCLE_OVERTIME = 0x86,
