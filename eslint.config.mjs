@@ -18,6 +18,7 @@ export default [
       "object-curly-spacing": ["error", "always"],
       "@typescript-eslint/consistent-type-imports": ["error"],
       "@typescript-eslint/no-this-alias": ["off"],
+      "@typescript-eslint/no-explicit-any": ["off"],
     },
   },
 ]
