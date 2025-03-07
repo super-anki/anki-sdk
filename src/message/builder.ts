@@ -11,6 +11,7 @@ import { PositionUpdateResponse } from "./response/position-update"
 import { StatusResponse } from "./response/status"
 import { TransitionUpdateResponse } from "./response/transition-update"
 import { VersionResponse } from "./response/version"
+import { Log } from "@/log"
 
 export class Builder {
   private _messageId: number
@@ -52,6 +53,7 @@ export class Builder {
     case ResponseCode.VERSION:
       return new VersionResponse(this._id, this._payload)
     default:
+      Log.debug(`Unknown message id: ${this._messageId}`, this._payload)
       return null
     }
   }
