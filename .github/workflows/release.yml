@@ -144,6 +144,7 @@ jobs:
           fi
 
       - name: Release
+        id: semantic_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -151,13 +152,15 @@ jobs:
       
       - name: Format message
         id: format
+        if: steps.semantic_release.outputs.new_release_published == 'true'
         run: |
-          TEXT="📦 @super-anki/anki-sdk v${{ github.event.release.tag_name }} is out! 🚀 🔗 ${{ github.event.release.html_url }}"
+          TEXT="📦 @super-anki/anki-sdk v${{ steps.semantic_release.outputs.new_release_version }} is out! 🚀 🔗 https://github.com/super-anki/anki-sdk/releases/tag/v${{ steps.semantic_release.outputs.new_release_version }}"
           echo "text<<EOF" >> $GITHUB_OUTPUT
           echo "$TEXT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
       
       - name: Post to Bluesky
+        if: steps.semantic_release.outputs.new_release_published == 'true'
         uses: zentered/bluesky-post-action@v0.3.0
         with:
           post: ${{ steps.format.outputs.text }}
