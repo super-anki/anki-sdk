@@ -1,3 +1,11 @@
+# [1.2.0](https://github.com/super-anki/anki-sdk/compare/v1.1.0...v1.2.0) (2025-07-23)
+
+
+### Features
+
+* add comprehensive constants and types definitions ([75e7885](https://github.com/super-anki/anki-sdk/commit/75e7885097c87e7e31afc108aa4425296d1165ed))
+* add message formatting and posting to Bluesky on release ([87aff06](https://github.com/super-anki/anki-sdk/commit/87aff062d17468d94120b90cf5da9f004bf9f1f0))
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
