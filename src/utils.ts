@@ -36,3 +36,68 @@ export enum ResponseCode {
     COLLISION = 0x4d,
     CYCLE_OVERTIME = 0x86,
 }
+
+// Buffer pool for optimized memory management
+class BufferPool {
+  private pools = new Map<number, Buffer[]>()
+  private readonly maxPoolSize = 10
+
+  allocOptimized(size: number): Buffer {
+    if (size <= 0) {
+      return Buffer.alloc(0)
+    }
+
+    const pool = this.pools.get(size)
+    if (pool && pool.length > 0) {
+      return pool.pop()!
+    }
+    
+    return Buffer.alloc(size)
+  }
+
+  release(buffer: Buffer): void {
+    if (!buffer || buffer.length === 0) return
+    
+    const size = buffer.length
+    buffer.fill(0) // Clear content for security
+    
+    let pool = this.pools.get(size)
+    if (!pool) {
+      pool = []
+      this.pools.set(size, pool)
+    }
+    
+    if (pool.length < this.maxPoolSize) {
+      pool.push(buffer)
+    }
+  }
+
+  clearPool(): void {
+    this.pools.clear()
+  }
+}
+
+const bufferPool = new BufferPool()
+
+/**
+ * Buffer utilities for optimized memory management
+ */
+export const BufferUtils = {
+  /**
+   * Allocate a buffer with optimized pooling
+   * @param size - Buffer size
+   * @returns Buffer instance
+   */
+  allocOptimized: (size: number): Buffer => bufferPool.allocOptimized(size),
+  
+  /**
+   * Release a buffer back to the pool for reuse
+   * @param buffer - Buffer to release
+   */
+  release: (buffer: Buffer): void => bufferPool.release(buffer),
+  
+  /**
+   * Clear all pooled buffers
+   */
+  clearPool: (): void => bufferPool.clearPool(),
+}

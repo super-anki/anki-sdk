@@ -17,22 +17,22 @@ export enum TurnType {
 }
 
 export class TurnRequest extends Message {
-  public readonly type: TurnType
+  public readonly turnType: TurnType
   public readonly trigger: TurnTrigger
 
   public constructor(
     id: string,
-    type: TurnType,
+    turnType: TurnType,
     trigger: TurnTrigger = TurnTrigger.IMMEDIATE,
   ) {
     super(id, Buffer.alloc(REQUEST_SIZE + 1))
 
     this.payload.writeUInt8(REQUEST_SIZE, 0)
     this.payload.writeUInt8(RequestCode.TURN, 1)
-    this.payload.writeUInt8(type, 2)
+    this.payload.writeUInt8(turnType, 2)
     this.payload.writeUInt8(trigger, 3)
 
-    this.type = type
+    this.turnType = turnType
     this.trigger = trigger
   }
 }
