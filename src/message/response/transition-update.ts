@@ -14,8 +14,8 @@ export class TransitionUpdateResponse extends Message {
   public readonly leftWheelDistCm: number
   public readonly rightWheelDistCm: number
 
-  public constructor(id: string, payload: Buffer) {
-    super(id, payload)
+  public constructor(id: string, payload: Buffer, type?: number) {
+    super(id, payload, type)
 
     this.roadPieceId = this.payload.readUInt8(2)
     this.prevRoadPieceId = this.payload.readUInt8(3)

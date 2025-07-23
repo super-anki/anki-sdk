@@ -6,8 +6,8 @@ export class StatusResponse extends Message {
   public readonly batteryLow: boolean
   public readonly batteryFull: boolean
 
-  public constructor(id: string, payload: Buffer) {
-    super(id, payload)
+  public constructor(id: string, payload: Buffer, type?: number) {
+    super(id, payload, type)
 
     this.onTrack = this.payload.readUInt8(2) === 1
     this.onCharger = this.payload.readUInt8(3) === 1

@@ -11,8 +11,8 @@ export class PositionUpdateResponse extends Message {
   public readonly lastDesiredLaneChangeSpeed: number
   public readonly lastDesiredSpeed: number
     
-  public constructor(id: string, payload: Buffer) {
-    super(id, payload)
+  public constructor(id: string, payload: Buffer, type?: number) {
+    super(id, payload, type)
 
     this.locationId = this.payload.readUInt8(2)
     this.roadPieceId = this.payload.readUInt8(3)

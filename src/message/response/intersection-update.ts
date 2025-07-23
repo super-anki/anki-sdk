@@ -8,8 +8,8 @@ export class IntersectionUpdateResponse extends Message {
   public readonly mmSinceLastTransitionBar: number
   public readonly mmSinceLastIntersectionCode: number
 
-  public constructor(id: string, payload: Buffer) {
-    super(id, payload)
+  public constructor(id: string, payload: Buffer, type?: number) {
+    super(id, payload, type)
 
     this.roadPieceId = this.payload.readUInt8(2)
     this.offsetRoadCenter = this.payload.readFloatLE(3)
