@@ -148,3 +148,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: bunx semantic-release
+      
+      - name: Format message
+        id: format
+        run: |
+          TEXT="📦 @super-anki/anki-sdk v${{ github.event.release.tag_name }} is out! 🚀 🔗 ${{ github.event.release.html_url }}"
+          echo "text<<EOF" >> $GITHUB_OUTPUT
+          echo "$TEXT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Post to Bluesky
+        uses: zentered/bluesky-post-action@v0.3.0
+        with:
+          post: ${{ steps.format.outputs.text }}
+        env:
+          BSKY_IDENTIFIER: ${{ secrets.BLUESKY_IDENTIFIER }}
+          BSKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
