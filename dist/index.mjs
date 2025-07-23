@@ -165,7 +165,61 @@ var Bluetooth = class {
 };
 
 // src/utils.ts
+var GattCharacteristic = /* @__PURE__ */ ((GattCharacteristic2) => {
+  GattCharacteristic2["SERVICE_UUID"] = "be15beef6186407e83810bd89c4d8df4";
+  GattCharacteristic2["READ_UUID"] = "be15bee06186407e83810bd89c4d8df4";
+  GattCharacteristic2["WRITE_UUID"] = "be15bee16186407e83810bd89c4d8df4";
+  return GattCharacteristic2;
+})(GattCharacteristic || {});
 var BASE_SIZE = 1;
+var BufferPool = class {
+  pools = /* @__PURE__ */ new Map();
+  maxPoolSize = 10;
+  allocOptimized(size) {
+    if (size <= 0) {
+      return Buffer.alloc(0);
+    }
+    const pool = this.pools.get(size);
+    if (pool && pool.length > 0) {
+      return pool.pop();
+    }
+    return Buffer.alloc(size);
+  }
+  release(buffer) {
+    if (!buffer || buffer.length === 0) return;
+    const size = buffer.length;
+    buffer.fill(0);
+    let pool = this.pools.get(size);
+    if (!pool) {
+      pool = [];
+      this.pools.set(size, pool);
+    }
+    if (pool.length < this.maxPoolSize) {
+      pool.push(buffer);
+    }
+  }
+  clearPool() {
+    this.pools.clear();
+  }
+};
+var bufferPool = new BufferPool();
+var BufferUtils = {
+  /**
+   * Allocate a buffer with optimized pooling
+   * @param size - Buffer size
+   * @returns Buffer instance
+   */
+  allocOptimized: (size) => bufferPool.allocOptimized(size),
+  /**
+   * Release a buffer back to the pool for reuse
+   * @param buffer - Buffer to release
+   */
+  release: (buffer) => bufferPool.release(buffer),
+  /**
+   * Clear all pooled buffers
+   */
+  clearPool: () => bufferPool.clearPool()
+};
 
 // src/message/message.ts
 var Message = class {
@@ -173,11 +227,22 @@ var Message = class {
   timestamp;
   payload;
   name;
-  constructor(id, payload) {
+  _type;
+  constructor(id, payload, type) {
     this.id = id;
     this.timestamp = /* @__PURE__ */ new Date();
     this.payload = payload;
     this.name = this.constructor.name;
+    this._type = type;
+  }
+  get type() {
+    if (this._type !== void 0) {
+      return this._type;
+    }
+    if (this.payload.length >= 2) {
+      return this.payload.readUInt8(1);
+    }
+    return 0;
   }
   toJsonString() {
     return JSON.stringify(
@@ -198,30 +263,30 @@ var Message = class {
 // src/message/response/battery-level.ts
 var BatteryLevelResponse = class extends Message {
   batteryLevel;
-  constructor(id, payload) {
-    super(id, payload);
+  constructor(id, payload, type) {
+    super(id, payload, type);
     this.batteryLevel = this.payload.readUInt16LE(2);
   }
 };
 
 // src/message/response/colllision.ts
 var CollisionResponse = class extends Message {
-  constructor(id, payload) {
-    super(id, payload);
+  constructor(id, payload, type) {
+    super(id, payload, type);
   }
 };
 
 // src/message/response/cycle-overtime.ts
 var CycleOvertimeResponse = class extends Message {
-  constructor(id, payload) {
-    super(id, payload);
+  constructor(id, payload, type) {
+    super(id, payload, type);
   }
 };
 
 // src/message/response/delocalized.ts
 var DelocalizedResponse = class extends Message {
-  constructor(id, payload) {
-    super(id, payload);
+  constructor(id, payload, type) {
+    super(id, payload, type);
   }
 };
 
@@ -233,8 +298,8 @@ var IntersectionUpdateResponse = class extends Message {
   isExisting;
   mmSinceLastTransitionBar;
   mmSinceLastIntersectionCode;
-  constructor(id, payload) {
-    super(id, payload);
+  constructor(id, payload, type) {
+    super(id, payload, type);
     this.roadPieceId = this.payload.readUInt8(2);
     this.offsetRoadCenter = this.payload.readFloatLE(3);
     this.intersectionCode = this.payload.readUInt8(7);
@@ -248,8 +313,8 @@ var IntersectionUpdateResponse = class extends Message {
 var OffsetRoadCenterResponse = class extends Message {
   offset;
   laneChangeId;
-  constructor(id, payload) {
-    super(id, payload);
+  constructor(id, payload, type) {
+    super(id, payload, type);
     this.offset = this.payload.readFloatLE(2);
     this.laneChangeId = this.payload.readUInt8(6);
   }
@@ -257,8 +322,8 @@ var OffsetRoadCenterResponse = class extends Message {
 
 // src/message/response/ping.ts
 var PingResponse = class extends Message {
-  constructor(id, payload) {
-    super(id, payload);
+  constructor(id, payload, type) {
+    super(id, payload, type);
   }
   calculatePingTime(request) {
     return this.timestamp.getMilliseconds() - request.timestamp.getMilliseconds();
@@ -276,8 +341,8 @@ var PositionUpdateResponse = class extends Message {
   lastExecLangeChangeCommandId;
   lastDesiredLaneChangeSpeed;
   lastDesiredSpeed;
-  constructor(id, payload) {
-    super(id, payload);
+  constructor(id, payload, type) {
+    super(id, payload, type);
     this.locationId = this.payload.readUInt8(2);
     this.roadPieceId = this.payload.readUInt8(3);
     this.offsetRoadCenter = this.payload.readFloatLE(4);
@@ -296,8 +361,8 @@ var StatusResponse = class extends Message {
   onCharger;
   batteryLow;
   batteryFull;
-  constructor(id, payload) {
-    super(id, payload);
+  constructor(id, payload, type) {
+    super(id, payload, type);
     this.onTrack = this.payload.readUInt8(2) === 1;
     this.onCharger = this.payload.readUInt8(3) === 1;
     this.batteryLow = this.payload.readUInt8(4) === 1;
@@ -319,8 +384,8 @@ var TransitionUpdateResponse = class extends Message {
   downhillCounter;
   leftWheelDistCm;
   rightWheelDistCm;
-  constructor(id, payload) {
-    super(id, payload);
+  constructor(id, payload, type) {
+    super(id, payload, type);
     this.roadPieceId = this.payload.readUInt8(2);
     this.prevRoadPieceId = this.payload.readUInt8(3);
     this.offsetRoadCenter = this.payload.readFloatLE(4);
@@ -339,49 +404,101 @@ var TransitionUpdateResponse = class extends Message {
 // src/message/response/version.ts
 var VersionResponse = class extends Message {
   version;
-  constructor(id, payload) {
-    super(id, payload);
+  constructor(id, payload, type) {
+    super(id, payload, type);
     this.version = this.payload.readUInt16LE(2);
   }
 };
 
 // src/message/builder.ts
+var RequestMessage = class extends Message {
+  buffer;
+  constructor(buffer, type) {
+    super("request-message", buffer, type);
+    this.buffer = buffer;
+  }
+  toJsonString() {
+    return JSON.stringify({
+      id: this.id,
+      timestamp: this.timestamp.toISOString(),
+      type: this.type,
+      buffer: Array.from(this.buffer)
+    });
+  }
+};
 var Builder = class {
   _messageId;
   _payload;
   _id;
+  _type;
+  _speed;
+  _acceleration;
+  _lights;
+  // Response builder constructor (3 params)
+  // Request builder constructor (0 params)
   constructor(id, messageId, payload) {
-    this._id = id;
-    this._messageId = messageId;
-    this._payload = payload;
+    if (id !== void 0 && messageId !== void 0 && payload !== void 0) {
+      this._id = id;
+      this._messageId = messageId;
+      this._payload = payload;
+    }
+  }
+  // Request builder methods
+  setType(type) {
+    this._type = type;
+    return this;
+  }
+  setSpeed(speed, acceleration) {
+    this._speed = speed;
+    this._acceleration = acceleration;
+    return this;
+  }
+  setLights(lights) {
+    this._lights = lights;
+    return this;
   }
   build() {
-    switch (this._messageId) {
-      case 27 /* BATTERY_LEVEL */:
-        return new BatteryLevelResponse(this._id, this._payload);
-      case 77 /* COLLISION */:
-        return new CollisionResponse(this._id, this._payload);
-      case 134 /* CYCLE_OVERTIME */:
-        return new CycleOvertimeResponse(this._id, this._payload);
-      case 43 /* DELOCALIZED */:
-        return new DelocalizedResponse(this._id, this._payload);
-      case 42 /* INTERSECTION_UPDATE */:
-        return new IntersectionUpdateResponse(this._id, this._payload);
-      case 45 /* OFFSET_FROM_ROAD_CENTER */:
-        return new OffsetRoadCenterResponse(this._id, this._payload);
-      case 23 /* PING */:
-        return new PingResponse(this._id, this._payload);
-      case 39 /* POSITION_UPDATE */:
-        return new PositionUpdateResponse(this._id, this._payload);
-      case 63 /* STATUS_UPDATE */:
-        return new StatusResponse(this._id, this._payload);
-      case 41 /* TRANSITION_UPDATE */:
-        return new TransitionUpdateResponse(this._id, this._payload);
-      case 25 /* VERSION */:
-        return new VersionResponse(this._id, this._payload);
-      default:
-        return null;
+    if (this._messageId !== void 0 && this._id !== void 0 && this._payload !== void 0) {
+      switch (this._messageId) {
+        case 27 /* BATTERY_LEVEL */:
+          return new BatteryLevelResponse(this._id, this._payload, this._messageId);
+        case 77 /* COLLISION */:
+          return new CollisionResponse(this._id, this._payload, this._messageId);
+        case 134 /* CYCLE_OVERTIME */:
+          return new CycleOvertimeResponse(this._id, this._payload, this._messageId);
+        case 43 /* DELOCALIZED */:
+          return new DelocalizedResponse(this._id, this._payload, this._messageId);
+        case 42 /* INTERSECTION_UPDATE */:
+          return new IntersectionUpdateResponse(this._id, this._payload, this._messageId);
+        case 45 /* OFFSET_FROM_ROAD_CENTER */:
+          return new OffsetRoadCenterResponse(this._id, this._payload, this._messageId);
+        case 23 /* PING */:
+          return new PingResponse(this._id, this._payload, this._messageId);
+        case 39 /* POSITION_UPDATE */:
+          return new PositionUpdateResponse(this._id, this._payload, this._messageId);
+        case 63 /* STATUS_UPDATE */:
+          return new StatusResponse(this._id, this._payload, this._messageId);
+        case 41 /* TRANSITION_UPDATE */:
+          return new TransitionUpdateResponse(this._id, this._payload, this._messageId);
+        case 25 /* VERSION */:
+          return new VersionResponse(this._id, this._payload, this._messageId);
+        default:
+          return null;
+      }
     }
+    if (this._type !== void 0) {
+      const buffer = Buffer.alloc(16);
+      buffer.writeUInt8(this._type, 0);
+      if (this._type === 36 /* SPEED */ && this._speed !== void 0 && this._acceleration !== void 0) {
+        buffer.writeUInt16LE(this._speed, 2);
+        buffer.writeUInt16LE(this._acceleration, 4);
+      }
+      if (this._type === 29 /* LIGHTS */ && this._lights !== void 0) {
+        buffer.writeUInt8(this._lights, 1);
+      }
+      return new RequestMessage(buffer, this._type);
+    }
+    return null;
   }
 };
 
@@ -439,14 +556,6 @@ var DisconnectRequest = class extends Message {
 
 // src/message/request/lights.ts
 var REQUEST_SIZE2 = 2;
-var Lights = /* @__PURE__ */ ((Lights2) => {
-  Lights2[Lights2["HEADLIGHTS_ON"] = 68] = "HEADLIGHTS_ON";
-  Lights2[Lights2["HEADLIGHTS_OFF"] = 4] = "HEADLIGHTS_OFF";
-  Lights2[Lights2["TAILLIGHTS_ON"] = 34] = "TAILLIGHTS_ON";
-  Lights2[Lights2["TAILLIGHTS_OFF"] = 2] = "TAILLIGHTS_OFF";
-  Lights2[Lights2["FLASH_TAILLIGHTS"] = 136] = "FLASH_TAILLIGHTS";
-  return Lights2;
-})(Lights || {});
 var LightsRequest = class extends Message {
   constructor(id, lights) {
     super(id, Buffer.alloc(REQUEST_SIZE2 + 1));
@@ -458,27 +567,6 @@ var LightsRequest = class extends Message {
 
 // src/message/request/lights-pattern.ts
 var REQUEST_SIZE3 = 17;
-var LightsTarget = /* @__PURE__ */ ((LightsTarget2) => {
-  LightsTarget2[LightsTarget2["HEAD"] = 0] = "HEAD";
-  LightsTarget2[LightsTarget2["BRAKE"] = 1] = "BRAKE";
-  LightsTarget2[LightsTarget2["FRONT"] = 2] = "FRONT";
-  LightsTarget2[LightsTarget2["ENGINE"] = 3] = "ENGINE";
-  return LightsTarget2;
-})(LightsTarget || {});
-var LightsPattern = /* @__PURE__ */ ((LightsPattern2) => {
-  LightsPattern2[LightsPattern2["STEADY"] = 0] = "STEADY";
-  LightsPattern2[LightsPattern2["FADE"] = 1] = "FADE";
-  LightsPattern2[LightsPattern2["THROB"] = 2] = "THROB";
-  LightsPattern2[LightsPattern2["FLASH"] = 3] = "FLASH";
-  LightsPattern2[LightsPattern2["RANDOM"] = 4] = "RANDOM";
-  return LightsPattern2;
-})(LightsPattern || {});
-var LightsChannel = /* @__PURE__ */ ((LightsChannel2) => {
-  LightsChannel2[LightsChannel2["RED"] = 0] = "RED";
-  LightsChannel2[LightsChannel2["BLUE"] = 2] = "BLUE";
-  LightsChannel2[LightsChannel2["GREEN"] = 3] = "GREEN";
-  return LightsChannel2;
-})(LightsChannel || {});
 var LightsPatternRequest = class extends Message {
   constructor(id, redStart, redEnd, greenStart, greenEnd, blueStart, blueEnd, target, pattern, cycle = 0) {
     super(id, Buffer.alloc(REQUEST_SIZE3 + 1));
@@ -562,29 +650,16 @@ var SpeedRequest = class extends Message {
 
 // src/message/request/turn.ts
 var REQUEST_SIZE7 = 3;
-var TurnTrigger = /* @__PURE__ */ ((TurnTrigger2) => {
-  TurnTrigger2[TurnTrigger2["IMMEDIATE"] = 0] = "IMMEDIATE";
-  TurnTrigger2[TurnTrigger2["INTERSECTION"] = 1] = "INTERSECTION";
-  return TurnTrigger2;
-})(TurnTrigger || {});
-var TurnType = /* @__PURE__ */ ((TurnType2) => {
-  TurnType2[TurnType2["NONE"] = 0] = "NONE";
-  TurnType2[TurnType2["LEFT"] = 1] = "LEFT";
-  TurnType2[TurnType2["RIGHT"] = 2] = "RIGHT";
-  TurnType2[TurnType2["UTURN"] = 3] = "UTURN";
-  TurnType2[TurnType2["UTURN_JUMP"] = 4] = "UTURN_JUMP";
-  return TurnType2;
-})(TurnType || {});
 var TurnRequest = class extends Message {
-  type;
+  turnType;
   trigger;
-  constructor(id, type, trigger = 0 /* IMMEDIATE */) {
+  constructor(id, turnType, trigger = 0 /* IMMEDIATE */) {
     super(id, Buffer.alloc(REQUEST_SIZE7 + 1));
     this.payload.writeUInt8(REQUEST_SIZE7, 0);
     this.payload.writeUInt8(50 /* TURN */, 1);
-    this.payload.writeUInt8(type, 2);
+    this.payload.writeUInt8(turnType, 2);
     this.payload.writeUInt8(trigger, 3);
-    this.type = type;
+    this.turnType = turnType;
     this.trigger = trigger;
   }
 };
@@ -910,25 +985,6 @@ var CarStore = class _CarStore {
 };
 
 // src/track/piece.ts
-var TrackDirection = /* @__PURE__ */ ((TrackDirection2) => {
-  TrackDirection2[TrackDirection2["NORTH"] = 0] = "NORTH";
-  TrackDirection2[TrackDirection2["EAST"] = 1] = "EAST";
-  TrackDirection2[TrackDirection2["SOUTH"] = 2] = "SOUTH";
-  TrackDirection2[TrackDirection2["WEST"] = 3] = "WEST";
-  return TrackDirection2;
-})(TrackDirection || {});
-var TrackType = /* @__PURE__ */ ((TrackType2) => {
-  TrackType2[TrackType2["UNKNOWN"] = 0] = "UNKNOWN";
-  TrackType2[TrackType2["STRAIGHT"] = 1] = "STRAIGHT";
-  TrackType2[TrackType2["CURVE"] = 2] = "CURVE";
-  TrackType2[TrackType2["START_GRID"] = 3] = "START_GRID";
-  TrackType2[TrackType2["FINISH_LINE"] = 4] = "FINISH_LINE";
-  TrackType2[TrackType2["FAST_N_FURIOUS_SPECIAL"] = 5] = "FAST_N_FURIOUS_SPECIAL";
-  TrackType2[TrackType2["CROSSROAD"] = 6] = "CROSSROAD";
-  TrackType2[TrackType2["JUMP_RAMP"] = 7] = "JUMP_RAMP";
-  TrackType2[TrackType2["JUMP_LANDING"] = 8] = "JUMP_LANDING";
-  return TrackType2;
-})(TrackType || {});
 function trackTypeFromId(id) {
   switch (id) {
     case 17:
@@ -1135,13 +1191,237 @@ var TrackScanner = class {
     return true;
   }
 };
+
+// src/constants.ts
+var CONSTANTS = {
+  // Buffer and message sizes
+  BASE_SIZE: 1,
+  DEFAULT_TIMEOUT: 1500,
+  SCANNING_TIMEOUT: 500,
+  STORE_SYNC_INTERVAL: 3e3,
+  MAX_RETRIES: 3,
+  // Default values
+  DEFAULT_SPEED: 300,
+  DEFAULT_ACCELERATION: 500,
+  DEFAULT_CYCLE: 0,
+  DEFAULT_HOP_INTENT: 0,
+  DEFAULT_TAG: 0,
+  // Request sizes (optimized as frozen object for better performance)
+  REQUEST_SIZES: Object.freeze({
+    BASE: 1,
+    TURN: 3,
+    SPEED: 6,
+    SDK_MODE: 3,
+    LIGHTS: 2,
+    LIGHTS_PATTERN: 17,
+    OFFSET_ROAD_CENTER: 5,
+    CHANGE_LANE: 11
+  })
+};
+var GATT_CHARACTERISTICS = {
+  SERVICE_UUID: "be15beef6186407e83810bd89c4d8df4",
+  READ_UUID: "be15bee06186407e83810bd89c4d8df4",
+  WRITE_UUID: "be15bee16186407e83810bd89c4d8df4"
+};
+var RequestCode2 = /* @__PURE__ */ ((RequestCode3) => {
+  RequestCode3[RequestCode3["DISCONNECT"] = 13] = "DISCONNECT";
+  RequestCode3[RequestCode3["PING"] = 22] = "PING";
+  RequestCode3[RequestCode3["VERSION"] = 24] = "VERSION";
+  RequestCode3[RequestCode3["BATTERY_LEVEL"] = 26] = "BATTERY_LEVEL";
+  RequestCode3[RequestCode3["LIGHTS"] = 29] = "LIGHTS";
+  RequestCode3[RequestCode3["SPEED"] = 36] = "SPEED";
+  RequestCode3[RequestCode3["CHANGE_LANE"] = 37] = "CHANGE_LANE";
+  RequestCode3[RequestCode3["CANCEL_LANE_CHANGE"] = 38] = "CANCEL_LANE_CHANGE";
+  RequestCode3[RequestCode3["SET_OFFSET_FROM_ROAD_CENTER"] = 44] = "SET_OFFSET_FROM_ROAD_CENTER";
+  RequestCode3[RequestCode3["TURN"] = 50] = "TURN";
+  RequestCode3[RequestCode3["LIGHTS_PATTERN"] = 51] = "LIGHTS_PATTERN";
+  RequestCode3[RequestCode3["CONFIG_PARAMS"] = 69] = "CONFIG_PARAMS";
+  RequestCode3[RequestCode3["SDK_MODE"] = 144] = "SDK_MODE";
+  RequestCode3[RequestCode3["SDK_OPTION_OVERRIDE"] = 1] = "SDK_OPTION_OVERRIDE";
+  return RequestCode3;
+})(RequestCode2 || {});
+var ResponseCode2 = /* @__PURE__ */ ((ResponseCode3) => {
+  ResponseCode3[ResponseCode3["PING"] = 23] = "PING";
+  ResponseCode3[ResponseCode3["VERSION"] = 25] = "VERSION";
+  ResponseCode3[ResponseCode3["BATTERY_LEVEL"] = 27] = "BATTERY_LEVEL";
+  ResponseCode3[ResponseCode3["POSITION_UPDATE"] = 39] = "POSITION_UPDATE";
+  ResponseCode3[ResponseCode3["TRANSITION_UPDATE"] = 41] = "TRANSITION_UPDATE";
+  ResponseCode3[ResponseCode3["INTERSECTION_UPDATE"] = 42] = "INTERSECTION_UPDATE";
+  ResponseCode3[ResponseCode3["DELOCALIZED"] = 43] = "DELOCALIZED";
+  ResponseCode3[ResponseCode3["OFFSET_FROM_ROAD_CENTER"] = 45] = "OFFSET_FROM_ROAD_CENTER";
+  ResponseCode3[ResponseCode3["STATUS_UPDATE"] = 63] = "STATUS_UPDATE";
+  ResponseCode3[ResponseCode3["COLLISION"] = 77] = "COLLISION";
+  ResponseCode3[ResponseCode3["CYCLE_OVERTIME"] = 134] = "CYCLE_OVERTIME";
+  return ResponseCode3;
+})(ResponseCode2 || {});
+var TRACK_TYPE_MAP = /* @__PURE__ */ new Map([
+  [17, 2],
+  // TrackType.CURVE
+  [18, 2],
+  // TrackType.CURVE
+  [20, 2],
+  // TrackType.CURVE
+  [23, 2],
+  // TrackType.CURVE
+  [36, 1],
+  // TrackType.STRAIGHT
+  [39, 1],
+  // TrackType.STRAIGHT
+  [40, 1],
+  // TrackType.STRAIGHT
+  [51, 1],
+  // TrackType.STRAIGHT
+  [57, 5],
+  // TrackType.FAST_N_FURIOUS_SPECIAL
+  [34, 3],
+  // TrackType.START_GRID
+  [33, 4],
+  // TrackType.FINISH_LINE
+  [10, 6],
+  // TrackType.CROSSROAD
+  [58, 7],
+  // TrackType.JUMP_RAMP
+  [63, 8]
+  // TrackType.JUMP_LANDING
+]);
+
+// src/types.ts
+var TrackDirection2 = /* @__PURE__ */ ((TrackDirection3) => {
+  TrackDirection3[TrackDirection3["NORTH"] = 0] = "NORTH";
+  TrackDirection3[TrackDirection3["EAST"] = 1] = "EAST";
+  TrackDirection3[TrackDirection3["SOUTH"] = 2] = "SOUTH";
+  TrackDirection3[TrackDirection3["WEST"] = 3] = "WEST";
+  return TrackDirection3;
+})(TrackDirection2 || {});
+var TrackType2 = /* @__PURE__ */ ((TrackType3) => {
+  TrackType3[TrackType3["UNKNOWN"] = 0] = "UNKNOWN";
+  TrackType3[TrackType3["STRAIGHT"] = 1] = "STRAIGHT";
+  TrackType3[TrackType3["CURVE"] = 2] = "CURVE";
+  TrackType3[TrackType3["START_GRID"] = 3] = "START_GRID";
+  TrackType3[TrackType3["FINISH_LINE"] = 4] = "FINISH_LINE";
+  TrackType3[TrackType3["FAST_N_FURIOUS_SPECIAL"] = 5] = "FAST_N_FURIOUS_SPECIAL";
+  TrackType3[TrackType3["CROSSROAD"] = 6] = "CROSSROAD";
+  TrackType3[TrackType3["JUMP_RAMP"] = 7] = "JUMP_RAMP";
+  TrackType3[TrackType3["JUMP_LANDING"] = 8] = "JUMP_LANDING";
+  return TrackType3;
+})(TrackType2 || {});
+var TurnTrigger = /* @__PURE__ */ ((TurnTrigger2) => {
+  TurnTrigger2[TurnTrigger2["IMMEDIATE"] = 0] = "IMMEDIATE";
+  TurnTrigger2[TurnTrigger2["INTERSECTION"] = 1] = "INTERSECTION";
+  return TurnTrigger2;
+})(TurnTrigger || {});
+var TurnType2 = /* @__PURE__ */ ((TurnType3) => {
+  TurnType3[TurnType3["NONE"] = 0] = "NONE";
+  TurnType3[TurnType3["LEFT"] = 1] = "LEFT";
+  TurnType3[TurnType3["RIGHT"] = 2] = "RIGHT";
+  TurnType3[TurnType3["UTURN"] = 3] = "UTURN";
+  TurnType3[TurnType3["UTURN_JUMP"] = 4] = "UTURN_JUMP";
+  return TurnType3;
+})(TurnType2 || {});
+var Lights = /* @__PURE__ */ ((Lights2) => {
+  Lights2[Lights2["HEADLIGHTS_ON"] = 68] = "HEADLIGHTS_ON";
+  Lights2[Lights2["HEADLIGHTS_OFF"] = 4] = "HEADLIGHTS_OFF";
+  Lights2[Lights2["TAILLIGHTS_ON"] = 34] = "TAILLIGHTS_ON";
+  Lights2[Lights2["TAILLIGHTS_OFF"] = 2] = "TAILLIGHTS_OFF";
+  Lights2[Lights2["FLASH_TAILLIGHTS"] = 136] = "FLASH_TAILLIGHTS";
+  return Lights2;
+})(Lights || {});
+var LightsTarget2 = /* @__PURE__ */ ((LightsTarget3) => {
+  LightsTarget3[LightsTarget3["HEAD"] = 0] = "HEAD";
+  LightsTarget3[LightsTarget3["BRAKE"] = 1] = "BRAKE";
+  LightsTarget3[LightsTarget3["FRONT"] = 2] = "FRONT";
+  LightsTarget3[LightsTarget3["ENGINE"] = 3] = "ENGINE";
+  return LightsTarget3;
+})(LightsTarget2 || {});
+var LightsPattern2 = /* @__PURE__ */ ((LightsPattern3) => {
+  LightsPattern3[LightsPattern3["STEADY"] = 0] = "STEADY";
+  LightsPattern3[LightsPattern3["FADE"] = 1] = "FADE";
+  LightsPattern3[LightsPattern3["THROB"] = 2] = "THROB";
+  LightsPattern3[LightsPattern3["FLASH"] = 3] = "FLASH";
+  LightsPattern3[LightsPattern3["RANDOM"] = 4] = "RANDOM";
+  return LightsPattern3;
+})(LightsPattern2 || {});
+var LightsChannel = /* @__PURE__ */ ((LightsChannel2) => {
+  LightsChannel2[LightsChannel2["RED"] = 0] = "RED";
+  LightsChannel2[LightsChannel2["BLUE"] = 2] = "BLUE";
+  LightsChannel2[LightsChannel2["GREEN"] = 3] = "GREEN";
+  return LightsChannel2;
+})(LightsChannel || {});
+var AnkiSDKError = class extends Error {
+  constructor(message, code, details) {
+    super(message);
+    this.code = code;
+    this.details = details;
+    this.name = "AnkiSDKError";
+  }
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      code: this.code,
+      details: this.details
+    };
+  }
+};
+var BluetoothError = class extends AnkiSDKError {
+  constructor(message, details) {
+    super(message, "BLUETOOTH_ERROR", details);
+    this.name = "BluetoothError";
+  }
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      code: this.code,
+      details: this.details
+    };
+  }
+};
+var CarConnectionError = class extends AnkiSDKError {
+  constructor(message, carId, details) {
+    super(message, "CAR_CONNECTION_ERROR", details);
+    this.carId = carId;
+    this.name = "CarConnectionError";
+  }
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      code: this.code,
+      carId: this.carId,
+      details: this.details
+    };
+  }
+};
+var MessageTimeoutError = class extends AnkiSDKError {
+  constructor(message, messageType, details) {
+    super(message, "MESSAGE_TIMEOUT_ERROR", details);
+    this.messageType = messageType;
+    this.name = "MessageTimeoutError";
+  }
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      code: this.code,
+      messageType: this.messageType,
+      details: this.details
+    };
+  }
+};
 export {
+  AnkiSDKError,
+  BASE_SIZE,
   BatteryLevelRequest,
   BatteryLevelResponse,
   Bluetooth,
+  BluetoothError,
+  BufferUtils,
   Builder,
+  CONSTANTS,
   CancelLangeChangeRequest,
   Car,
+  CarConnectionError,
   CarScanner,
   CarStore,
   ChangeLaneRequest,
@@ -1150,30 +1430,36 @@ export {
   DelocalizedResponse,
   Device,
   DisconnectRequest,
+  GATT_CHARACTERISTICS,
+  GattCharacteristic,
   IntersectionUpdateResponse,
   Lights,
   LightsChannel,
-  LightsPattern,
+  LightsPattern2 as LightsPattern,
   LightsPatternRequest,
   LightsRequest,
-  LightsTarget,
+  LightsTarget2 as LightsTarget,
   Message,
+  MessageTimeoutError,
   OffsetRoadCenterRequest,
   OffsetRoadCenterResponse,
   PingRequest,
   PingResponse,
   PositionUpdateResponse,
+  RequestCode2 as RequestCode,
+  ResponseCode2 as ResponseCode,
   SdkModeRequest,
   SpeedRequest,
   StatusResponse,
-  TrackDirection,
+  TRACK_TYPE_MAP,
+  TrackDirection2 as TrackDirection,
   TrackPiece,
   TrackScanner,
-  TrackType,
+  TrackType2 as TrackType,
   TransitionUpdateResponse,
   TurnRequest,
   TurnTrigger,
-  TurnType,
+  TurnType2 as TurnType,
   VersionRequest,
   VersionResponse,
   trackTypeFromId
