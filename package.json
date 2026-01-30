@@ -54,7 +54,8 @@
     "@abandonware/noble": "^1.9.2-26"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
   },
   "release": {
     "branches": [
