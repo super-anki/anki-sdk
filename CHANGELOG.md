@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/super-anki/anki-sdk/compare/v1.2.0...v1.2.1) (2026-01-30)
+
+
+### Bug Fixes
+
+* correct multiple typos in codebase ([#3](https://github.com/super-anki/anki-sdk/issues/3)) ([16455b4](https://github.com/super-anki/anki-sdk/commit/16455b4ea2a8c31a1889b65cc0cd5b2da9ef47b0))
+
 # [1.2.0](https://github.com/super-anki/anki-sdk/compare/v1.1.0...v1.2.0) (2025-07-23)
 
 
