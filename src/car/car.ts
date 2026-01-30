@@ -2,7 +2,7 @@ import type { DeviceContract } from "@/ble/device"
 import { Builder } from "@/message/builder"
 import type { Message } from "@/message/message"
 import { BatteryLevelRequest } from "@/message/request/battery-level"
-import { CancelLangeChangeRequest } from "@/message/request/cancel-lane-change"
+import { CancelLaneChangeRequest } from "@/message/request/cancel-lane-change"
 import { ChangeLaneRequest } from "@/message/request/change-lane"
 import { DisconnectRequest } from "@/message/request/disconnect"
 import type { Lights } from "@/message/request/lights"
@@ -29,7 +29,7 @@ export interface CarContract {
     nameCode: number
     offset: number
 
-    cancelLangeChange(): void
+    cancelLaneChange(): void
     changeLane(offset: number, speed?: number, acceleration?: number, hopIntent?: number, tag?: number): void
     connect(): Promise<CarContract>
     disableSdkMode(): void
@@ -85,8 +85,8 @@ export class Car implements CarContract {
     this._listeners = []
   }
 
-  public cancelLangeChange(): void {
-    this.writePublish(new CancelLangeChangeRequest(this.id))
+  public cancelLaneChange(): void {
+    this.writePublish(new CancelLaneChangeRequest(this.id))
   }
 
   public changeLane(offset: number, speed?: number, acceleration?: number, hopIntent?: number, tag?: number): void {

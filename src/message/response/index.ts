@@ -1,5 +1,5 @@
 export * from "./battery-level"
-export * from "./colllision"
+export * from "./collision"
 export * from "./cycle-overtime"
 export * from "./delocalized"
 export * from "./intersection-update"

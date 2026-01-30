@@ -162,16 +162,19 @@ await car.disconnect()
 // Basic control
 car.setSpeed(speed: number, acceleration?: number)
 car.changeLane(offset: number)
+car.cancelLaneChange()
 car.turnLeft()
 car.turnRight()
-car.uturn()
+car.uTurn()
+car.uTurnJump()
 
 // Lights
 car.setLights(mask: number)
 car.setLightsPattern(channel, effect, start, end, cycles)
 
 // Configuration
-car.sdkMode()                    // Enable SDK mode for full control
+car.enableSdkMode()              // Enable SDK mode for full control
+car.disableSdkMode()             // Disable SDK mode
 car.setOffset(offset: number)    // Set lane offset
 ```
 
