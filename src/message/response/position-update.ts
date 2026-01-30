@@ -7,7 +7,7 @@ export class PositionUpdateResponse extends Message {
   public readonly speed: number
   public readonly parsingFlags: number
   public readonly lastReceiveLaneChangeCommandId: number
-  public readonly lastExecLangeChangeCommandId: number
+  public readonly lastExecLaneChangeCommandId: number
   public readonly lastDesiredLaneChangeSpeed: number
   public readonly lastDesiredSpeed: number
     
@@ -20,7 +20,7 @@ export class PositionUpdateResponse extends Message {
     this.speed = this.payload.readUInt16LE(8)
     this.parsingFlags = this.payload.readUInt8(10)
     this.lastReceiveLaneChangeCommandId = this.payload.readUInt8(11)
-    this.lastExecLangeChangeCommandId = this.payload.readUInt8(12)
+    this.lastExecLaneChangeCommandId = this.payload.readUInt8(12)
     this.lastDesiredLaneChangeSpeed = this.payload.readUInt16LE(13)
     this.lastDesiredSpeed = this.payload.readUInt16LE(15)
   }

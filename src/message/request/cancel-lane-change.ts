@@ -1,7 +1,7 @@
 import { BASE_SIZE, RequestCode } from "@/utils"
 import { Message } from "../message"
 
-export class CancelLangeChangeRequest extends Message {
+export class CancelLaneChangeRequest extends Message {
   public constructor(id: string) {
     super(id, Buffer.alloc(BASE_SIZE + 1))
 

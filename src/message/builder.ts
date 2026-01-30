@@ -1,7 +1,7 @@
 import { ResponseCode, RequestCode } from "@/utils"
 import { Message } from "./message"
 import { BatteryLevelResponse } from "./response/battery-level"
-import { CollisionResponse } from "./response/colllision"
+import { CollisionResponse } from "./response/collision"
 import { CycleOvertimeResponse } from "./response/cycle-overtime"
 import { DelocalizedResponse } from "./response/delocalized"
 import { IntersectionUpdateResponse } from "./response/intersection-update"
