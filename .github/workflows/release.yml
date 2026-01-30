@@ -97,6 +97,7 @@ jobs:
       issues: write
       pull-requests: write
       id-token: write
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -143,11 +144,16 @@ jobs:
             echo "" >> CHANGELOG.md
           fi
 
+      - name: Configure npm for GitHub Packages
+        run: |
+          echo "@super-anki:registry=https://npm.pkg.github.com" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=\${NODE_AUTH_TOKEN}" >> .npmrc
+
       - name: Release
         id: semantic_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bunx semantic-release
       
       - name: Format message

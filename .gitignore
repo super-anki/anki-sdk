@@ -4,3 +4,6 @@ dist
 
 # Bun
 .bun
+
+# npm config (created by CI for publishing)
+.npmrc
