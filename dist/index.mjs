@@ -127,11 +127,11 @@ var Bluetooth = class {
           await noble.startScanningAsync(uuids, false);
         }
       });
-      noble.on("discover", async (peripheral) => {
+      noble.on("discover", (async (peripheral) => {
         self._state = "poweredOn";
         self._onDiscover(new Device(peripheral.id, peripheral.address, peripheral));
         resolve();
-      });
+      }));
       if (self._state === "poweredOn") {
         noble.startScanning(uuids, false);
       }
