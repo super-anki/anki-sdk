@@ -311,7 +311,11 @@ npm install
 
 ### 2. Create a Feature Branch
 
+**Important**: Always create feature branches from the `dev` branch, not `main`.
+
 ```bash
+git checkout dev
+git pull origin dev
 git checkout -b feature/your-feature-name
 ```
 
@@ -342,8 +346,11 @@ git commit -m "docs: update API documentation"
 ### 5. Submit a Pull Request
 
 - Push your branch to your fork
-- Create a pull request with a clear description
+- Create a pull request targeting the `dev` branch (not `main`)
+- Provide a clear description of your changes
 - Link any related issues
+
+**Note**: Pull requests should target the `dev` branch. The `main` branch is reserved for production releases.
 
 ### Development Guidelines
 
